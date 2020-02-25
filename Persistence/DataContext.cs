@@ -12,6 +12,7 @@ namespace Persistence
         }
 
         public DbSet<Value> Values { get; set; } // <Value> = class utilisé ; Values = Nom de la table ; DbSet
+        public DbSet<Activity> Activities { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<Value>().HasData(
