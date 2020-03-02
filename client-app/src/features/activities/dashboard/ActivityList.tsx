@@ -6,9 +6,15 @@ interface IProps {
     activities : IActivity[] // redef de l'interface car ce hooks l'utilise aussi
     selectActivity: (id: string) => void;
     deleteActivity: (id: string) => void;
+    submitting: boolean
 }
 
-const ActivityList: React.FC<IProps> = ({activities, selectActivity, deleteActivity}) => {
+const ActivityList: React.FC<IProps> = ({
+    activities, 
+    selectActivity, 
+    deleteActivity,
+    submitting
+}) => {
     return (
         <Segment clearing>
             <Item.Group divided>
@@ -28,7 +34,8 @@ const ActivityList: React.FC<IProps> = ({activities, selectActivity, deleteActiv
                                 content='View' 
                                 color='blue' 
                             />
-                            <Button 
+                            <Button
+                                loading={submitting} 
                                 onClick={() => deleteActivity(activity.id)} 
                                 floated='right' 
                                 content='Delete' 
