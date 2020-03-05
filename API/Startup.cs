@@ -31,7 +31,7 @@ namespace API
         {
             services.AddDbContext<DataContext>(opt => 
             {
-                opt.UseSqlite(Configuration.GetConnectionString("DefaultConnection"));
+                opt.UseSqlite("Data Source = truc.db");
             });
             services.AddCors(opt => {
                 opt.AddPolicy("CorsPolicy", policy => {
