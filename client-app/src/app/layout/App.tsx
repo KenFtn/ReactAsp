@@ -26,35 +26,7 @@ const App = () =>  {
   const [submitting, setSubmitting] = useState(false);
   const [target, setTarget] = useState('');
 
-  const handleSelectActivity = (id: string) => {
-    setSelectedActivity(activities.filter(a => a.id === id)[0]) //prendre l'index 0 car c'est un array. ( un array d'un seul élement )
-    setEditMode(false);
-  }
-  //fonction pour ouvrir le formulaire et fermer le détail lorsque j'appuis sur "create new activity"
-  const handleOpenCreateForm = () => {
-    setSelectedActivity(null);
-    setEditMode(true);
-  }
-
-  const handleCreateActivity = (activity: IActivity) => {
-    setSubmitting(true);
-    agent.Activities.create(activity).then(() => {
-      setActivities([...activities, activity])
-      setSelectedActivity(activity);
-      setEditMode(false);
-    }).then(() => setSubmitting(false))
-  }
-
-  const handleEditActivity = (activity: IActivity) => {
-    setSubmitting(true);
-    agent.Activities.update(activity).then(() => {
-      setActivities([...activities.filter(a => a.id !== activity.id), activity])
-      setSelectedActivity(activity);
-      setEditMode(false);
-    }).then(() => setSubmitting(false))
-
-  }
-
+  
   const handleDeleteActivity = (event: SyntheticEvent<HTMLButtonElement>, id: string) => {
     setSubmitting(true);
     setTarget(event.currentTarget.name) 
@@ -74,15 +46,12 @@ const App = () =>  {
 
     return (
       <Fragment>
-          <NavBar openCreateForm={handleOpenCreateForm}/>
+          <NavBar />
           <Container style={{marginTop: "7em"}}>
             <ActivityDashboard 
-              activities={activityStore.activities} 
-              selectActivity={handleSelectActivity} 
+              activities={activityStore.activities}  
               setEditMode={setEditMode}
               setSelectedActivity={setSelectedActivity}
-              createActivity={handleCreateActivity}
-              editActivity={handleEditActivity}
               deleteActivity={handleDeleteActivity}
               submitting={submitting}
               target={target}
