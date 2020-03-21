@@ -1,8 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using API.Middleware;
 using Application.Activities;
+using FluentValidation.AspNetCore;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -33,21 +35,28 @@ namespace API
             {
                 opt.UseSqlite("Data Source = truc.db");
             });
+            // Gestion du CORS ( gestion des droits d'utilisation de l'api.)
             services.AddCors(opt => {
                 opt.AddPolicy("CorsPolicy", policy => {
                     policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
                 });
             });
+            // Ajoute le bidule pour faire du Mediator
             services.AddMediatR(typeof(List.Handler).Assembly);
-            services.AddControllers();
+            // Ajoute les validations 
+            services.AddControllers()
+                .AddFluentValidation(cfg => {
+                    cfg.RegisterValidatorsFromAssemblyContaining<Create>();
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseMiddleware<ErrorHandlingMiddleware>(); // j'utile mon propre middleware d'exception
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
+               // app.UseDeveloperExceptionPage(); On va utiliser notre propre middleware d'exception
             }
 
             // app.UseHttpsRedirection();

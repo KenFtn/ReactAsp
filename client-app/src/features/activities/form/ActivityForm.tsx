@@ -26,13 +26,13 @@ const ActivityForm: React.FC<RouteChildrenProps<DetailParams>> = ({match, histor
     });
 
     useEffect(() => {
-        if(match?.params.id && activity.id.length === 0) {
-            loadActivity(match.params.id).then(() => initialFormState && setActivity(initialFormState));
+        if(match!.params.id && activity.id.length === 0) {
+            loadActivity(match!.params.id).then(() => initialFormState && setActivity(initialFormState));
         }
         return () => {
             clearActivity()
         }
-    }, [loadActivity, match?.params.id, clearActivity, initialFormState]);
+    }, [loadActivity, match, clearActivity, initialFormState, activity.id.length]);
 
     const handleSubmit = () => {
         if(activity.id.length === 0) {

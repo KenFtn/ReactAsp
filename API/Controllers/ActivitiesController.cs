@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Application.Activities;
 using Domain;
@@ -16,14 +15,12 @@ namespace API.Controllers
         private readonly IMediator _mediator;
         public ActivitiesController(IMediator mediator)
         {
-            // Requête les dossiers entre eux
             _mediator = mediator;
         }
 
         [HttpGet]
         public async Task<ActionResult<List<Activity>>> List()
         {
-            //List = Class dans Application/activities
             return await _mediator.Send(new List.Query());
         }
 
@@ -34,9 +31,22 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Unit>> Create(Create.Command command) //Create est un truc de APIController
+        public async Task<ActionResult<Unit>> Create(Create.Command command)
         {
             return await _mediator.Send(command);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<Unit>> Edit(Guid id, Edit.Command command)
+        {
+            command.Id = id;
+            return await _mediator.Send(command);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<Unit>> Delete(Guid id)
+        {
+            return await _mediator.Send(new Delete.Command{Id = id});
         }
     }
 }
