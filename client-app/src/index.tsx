@@ -1,13 +1,25 @@
+//import react component
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Router} from 'react-router-dom';
 import {createBrowserHistory} from 'history';
+import * as serviceWorker from './serviceWorker';
+
+//import css
 import 'react-toastify/dist/ReactToastify.min.css';
 import './app/layout/styles.css';
-import App from './app/layout/App';
-import * as serviceWorker from './serviceWorker';
+import 'react-widgets/dist/css/react-widgets.css';
 import 'semantic-ui-css/semantic.min.css';
+
+
+//import custom component
+import dateFnsLocalizer from 'react-widgets-date-fns';
 import ScrollToTop from './app/layout/ScrollToTop';
+import App from './app/layout/App';
+
+
+//initialize date fns
+dateFnsLocalizer();
 
 export const history = createBrowserHistory();
 

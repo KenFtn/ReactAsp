@@ -2,6 +2,8 @@ import {observable, action, computed, configure, runInAction } from 'mobx';
 import { createContext, SyntheticEvent } from 'react';
 import { IActivity } from '../models/activity';
 import agent from '../api/agent';
+import { history } from '../..';
+import { toast } from 'react-toastify';
 
 
 configure({enforceActions: 'always'}); //scrict mode for mobX
@@ -22,59 +24,59 @@ class ActivityStore {
     }
 
     // ****** Helper Fonction ***********
-    groupActivitiesByDate(activities: IActivity[]){
+    groupActivitiesByDate(activities: IActivity[]) {
         const sortedActivities = activities.sort(
-            (a, b) => Date.parse(a.date) - Date.parse(b.date)
+          (a, b) => a.date.getTime() - b.date.getTime()
         )
         return Object.entries(sortedActivities.reduce((activities, activity) => {
-            const date = activity.date.split('T')[0];
-            activities[date] = activities[date] ? [...activities[date], activity] : [activity];
-            return activities;
-        }, {} as { [key:string] : IActivity[] }));
-    }
+          const date = activity.date.toISOString().split('T')[0];
+          activities[date] = activities[date] ? [...activities[date], activity] : [activity];
+          return activities;
+        }, {} as {[key: string]: IActivity[]}));
+      }
 
     // *******     Definition des actions *******
 
     //activitation du loader
     @action loadActivities = async () => {
-       this.loadingInitial = true; // Je met le loader temps que mes activités ne sont pas chargé
-
-       //remplacement des promesses axios par de l'asynchrone
-       try {
-            const activities = await agent.Activities.list(); // utilisation de axios via le ficher agent.ts
-            runInAction('loading activities', () => { // activation de mobX strict mode. Impossible de changer le state pendant une action normalement. Donc RunInAction permet de changer ça. 
-                activities.forEach(activity => {
-                    activity.date = activity.date.split('.')[0] // formatage de la date
-                    this.activityRegistry.set(activity.id, activity); // permet de 'mapper' l'activité. Prends deux params, une key et une value. voir doc MobX
-                })
-                this.loadingInitial = false; // j'enleve le loader
-            })
-       } catch (error) {
-           runInAction('load activities error',() => {
-                this.loadingInitial = false; // si erreur, j'enleve le loader quand même
-           })
-            console.log(error);
-       }
-    };
+        this.loadingInitial = true;
+        try {
+          const activities = await agent.Activities.list();
+          runInAction('loading activities', () => {
+            activities.forEach(activity => {
+              activity.date = new Date(activity.date)
+              this.activityRegistry.set(activity.id, activity);
+            });
+            this.loadingInitial = false;
+          })
+        } catch (error) {
+          runInAction('load activities error', () => {
+            this.loadingInitial = false;
+          })
+        }
+      };
 
     //load d'une seul activité, pour faire fonctionner la route
     @action loadActivity = async (id: string) => {
         let activity = this.getActivity(id);
         if(activity) { //si mon activité est dans mon registry 
             this.activity = activity;
+            this.activityRegistry.set(activity.id, activity);
+            return activity;
         } else {
             this.loadingInitial = true; // j'active mon loader car je vais en base
             try {
                 activity = await agent.Activities.details(id); //je requète ma base car j'ai pas l'activité dans mon registry
                 runInAction('getting activity', () => {
+                    activity.date = new Date(activity.date);
                     this.activity = activity;
                     this.loadingInitial = false;
                 })
+                return activity;
             } catch(error) {
                 runInAction('get activity error', () => {
                     this.loadingInitial = false;
                 })
-                console.log(error);
             }
         }
     }
@@ -95,11 +97,13 @@ class ActivityStore {
             runInAction('creating activity',() => {
                 this.activityRegistry.set(activity.id, activity);
                 this.submitting = false;
-            })
+            });
+            history.push(`/activities/${activity.id}`)
         } catch (error) {
             runInAction('create activity error',() => {
                 this.submitting = false;
-            })
+            });
+            toast.error('Problem submitting data');
             console.log(error);
         }
     };
@@ -108,16 +112,18 @@ class ActivityStore {
         this.submitting = true;
         try {
             await agent.Activities.update(activity); // j'enregistre les modifs de mon activité en back.
+            console.log(activity);
             runInAction('editing activities', () => {
                 this.activityRegistry.set(activity.id, activity); // j'enregistre les modifs de mon activité en front. 
                 this.activity = activity; // J'ouvre l'activité que je viens d'éditer
                 this.submitting = false; // Je ferme l'envoie du formulaire
-            })
-
+            });
+            history.push(`/activities/${activity.id}`)
         } catch (error) {
             runInAction('edit activities error',() => {
                 this.submitting = false;
-            })
+            });
+            toast.error('Problem submitting data');
             console.log(error);
         }
     }
