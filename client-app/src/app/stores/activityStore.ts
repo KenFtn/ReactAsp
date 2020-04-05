@@ -1,14 +1,20 @@
-import {observable, action, computed, configure, runInAction } from 'mobx';
-import { createContext, SyntheticEvent } from 'react';
+import {observable, action, computed, runInAction } from 'mobx';
+import { SyntheticEvent } from 'react';
 import { IActivity } from '../models/activity';
 import agent from '../api/agent';
 import { history } from '../..';
 import { toast } from 'react-toastify';
+import { RootStore } from './rootStore';
 
 
-configure({enforceActions: 'always'}); //scrict mode for mobX
+export default class ActivityStore {
 
-class ActivityStore {
+    rootStore: RootStore;
+    constructor (rootStore : RootStore) {
+        this.rootStore = rootStore;
+    }
+
+
     // *******      Definition des observables ***********
     @observable activityRegistry = new Map(); // Permet de gérer les listes des activités. Voir la doc de MobX
     // On aurait pu également faire un array d'activité. Le fonctionnement serai le même, juste la syntax change.
@@ -153,4 +159,3 @@ class ActivityStore {
 
 }
 
-export default createContext(new ActivityStore());
