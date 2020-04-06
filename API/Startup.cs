@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using API.Middleware;
 using Application.Activities;
 using Application.Interfaces;
+using AutoMapper;
 using Domain;
 using FluentValidation.AspNetCore;
 using Infrastructure.Security;
@@ -42,6 +43,7 @@ namespace API
         {
             services.AddDbContext<DataContext>(opt => 
             {
+                opt.UseLazyLoadingProxies();
                 opt.UseSqlite(Configuration.GetConnectionString("DefaultConnection"));
             });
             // Gestion du CORS ( gestion des droits d'utilisation de l'api.)
@@ -52,6 +54,8 @@ namespace API
             });
             // Ajoute le bidule pour faire du Mediator
             services.AddMediatR(typeof(List.Handler).Assembly);
+
+            services.AddAutoMapper(typeof(List.Handler));
             // Ajoute les validations 
             services.AddControllers(opt => 
             {
@@ -67,6 +71,15 @@ namespace API
 
             identityBuilder.AddEntityFrameworkStores<DataContext>();
             identityBuilder.AddSignInManager<SignInManager<AppUser>>();
+
+            services.AddAuthorization(opt => {
+                opt.AddPolicy("IsActivityHost", policy => 
+                {
+                    policy.Requirements.Add(new IsHostRequirement());
+                });
+            });
+
+            services.AddTransient<IAuthorizationHandler, IsHostRequirementHandler>();
 
             services.AddScoped<IJwtGenerator, JwtGenerator>();
 
