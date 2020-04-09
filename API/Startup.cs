@@ -9,6 +9,7 @@ using Application.Interfaces;
 using AutoMapper;
 using Domain;
 using FluentValidation.AspNetCore;
+using Infrastructure.Photos;
 using Infrastructure.Security;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -41,21 +42,32 @@ namespace API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            /********************************************************************************
+                            Gestion de la base de donnée
+            *********************************************************************************/
             services.AddDbContext<DataContext>(opt => 
             {
                 opt.UseLazyLoadingProxies();
                 opt.UseSqlite(Configuration.GetConnectionString("DefaultConnection"));
             });
-            // Gestion du CORS ( gestion des droits d'utilisation de l'api.)
+
+            /*********************************************************************************
+                        Gestion du CORS ( gestion des droits d'utilisation de l'api.)
+            ***********************************************************************************/
             services.AddCors(opt => {
                 opt.AddPolicy("CorsPolicy", policy => {
                     policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
                 });
             });
-            // Ajoute le bidule pour faire du Mediator
+
+
+            /*********************************************************************************
+                                        Ajout de MediaR
+            ***********************************************************************************/
             services.AddMediatR(typeof(List.Handler).Assembly);
 
             services.AddAutoMapper(typeof(List.Handler));
+
             // Ajoute les validations 
             services.AddControllers(opt => 
             {
@@ -66,6 +78,9 @@ namespace API
                     cfg.RegisterValidatorsFromAssemblyContaining<Create>();
                 });
 
+            /**********************************************************************************
+                                    Gestion des Utilisateurs
+            ***********************************************************************************/ 
             var builder = services.AddIdentityCore<AppUser>();
             var identityBuilder = new IdentityBuilder(builder.UserType, builder.Services);
 
@@ -80,9 +95,7 @@ namespace API
             });
 
             services.AddTransient<IAuthorizationHandler, IsHostRequirementHandler>();
-
-            services.AddScoped<IJwtGenerator, JwtGenerator>();
-
+            // Gestion des tokens
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["TokenKey"]));
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(opt => {
                 opt.TokenValidationParameters = new TokenValidationParameters
@@ -93,8 +106,17 @@ namespace API
                     ValidateIssuer = false
                 };
             });
-
+            /*******************************************************************************
+                            Gestions des links Objets - Interfaces
+            ********************************************************************************/
             services.AddScoped<IUserAccessor, UserAccessor>();
+            services.AddScoped<IPhotoAccessor, PhotoAccessor>();
+            services.AddScoped<IJwtGenerator, JwtGenerator>();
+
+            /********************************************************************************
+                            Ajout de la gestion du cloud
+            *********************************************************************************/
+            services.Configure<CloudinarySettings>(Configuration.GetSection("Cloudinary")); 
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
