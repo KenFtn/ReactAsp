@@ -9,17 +9,17 @@ interface IProps{
 const ActivityListItemAttendees : React.FC<IProps> = ({attendees}) => {
     return (
         <List horizontal>
-            {attendees.map((attendee) => {
-                <List.Item key={attendee.username}>
+            {attendees.map((attendee) => (
+                <List.Item key={attendee.userName}>
                     <Popup 
-                        header={attendee.username}
+                        header={attendee.displayName}
                         trigger={
                             <Image size='mini' circular src={attendee.image || '/assets/user.png'}/> 
                         }
                     />
                                   
                 </List.Item>
-            })}
+            ))}
         </List>
     )
 }

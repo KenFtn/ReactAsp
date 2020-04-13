@@ -9,6 +9,7 @@ namespace API.Controllers
         [HttpGet("{username}")]
         public async Task<ActionResult<Profile>> GetTask(string username)
         {
+            username = username.ToLower();
             return await Mediator.Send(new Details.Query{Username= username});
         }
     }

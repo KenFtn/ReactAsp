@@ -48,7 +48,6 @@ export default class ActivityStore {
     //activitation du loader
     @action loadActivities = async () => {
         this.loadingInitial = true;
-        const user = this.rootStore.userStore.user!;
         try {
           const activities = await agent.Activities.list();
           runInAction('loading activities', () => {
@@ -193,7 +192,7 @@ export default class ActivityStore {
             await agent.Activities.unattend(this.activity!.id)
             runInAction(() => {
                 if (this.activity) {
-                    this.activity.attendees = this.activity.attendees.filter(a => a.username !== this.rootStore.userStore.user!.username);
+                    this.activity.attendees = this.activity.attendees.filter(a => a.userName !== this.rootStore.userStore.user!.username);
                     this.activity.isGoing = false;
                     this.activityRegistry.set(this.activity.id, this.activity);
                     this.loading = false;

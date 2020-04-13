@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Label, Select } from 'semantic-ui-react';
+import { Form, Label } from 'semantic-ui-react';
 import { DateTimePicker } from 'react-widgets';
 
 const DateInput: React.FC<any> = ({
