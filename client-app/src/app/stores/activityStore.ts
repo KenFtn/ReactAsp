@@ -6,6 +6,7 @@ import { history } from '../..';
 import { toast } from 'react-toastify';
 import { RootStore } from './rootStore';
 import { setActivityProps, createAttendee } from '../common/util/util';
+import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 
 
 export default class ActivityStore {
@@ -24,6 +25,42 @@ export default class ActivityStore {
     @observable submitting = false; //observateur de l'envoie d'une nouvelle activité
     @observable target = '';
     @observable loading = false;
+
+    /************ Connection avec SignalR *****************/
+    @observable.ref hubConnection: HubConnection | null = null;
+
+    @action createHubConnection = (activityId: string) => {
+        this.hubConnection = new HubConnectionBuilder().withUrl('http://localhost:5000/chat', {
+            accessTokenFactory: () => this.rootStore.commonStore.token!
+        }).configureLogging(LogLevel.Information).build();
+
+        this.hubConnection
+            .start()
+            .then(() => console.log(this.hubConnection!.state))
+            .then(() => {
+                        if(this.hubConnection!.state === 'Connected'){
+                            this.hubConnection!.invoke('AddToGroup', activityId)
+                        }
+                    }) 
+            .catch(error => console.log('Error establishing connection: ', error));
+
+        this.hubConnection.on('ReceiveComment', comment => {
+            runInAction(() => {
+                this.activity!.comments.push(comment);
+            })
+        })
+
+        this.hubConnection.on('Send', message => {
+            toast.info(message);
+        })
+    }
+
+    @action stopHubConnection = () => {
+        this.hubConnection!.invoke('RemoveFromGroup', this.activity!.id)
+            .then(() => {this.hubConnection!.stop();})
+            .catch(err => console.log(err))
+        
+    }
 
     // ******     Definition des computed *****************
     @computed get activitiesByDate() {
@@ -107,6 +144,7 @@ export default class ActivityStore {
             let attendees = [];
             attendees.push(attendee);
             activity.attendees = attendees;
+            activity.comments = [];
             activity.isHost = true;
             runInAction('creating activity',() => {
                 this.activityRegistry.set(activity.id, activity);
@@ -203,10 +241,16 @@ export default class ActivityStore {
                 this.loading = false;
             })
             toast.error("Problem cancelling attendance")
+        }    
+    }
+
+    @action addComment = async (values: any) => {
+        values.activityId = this.activity!.id; // correspond au nom de la variable dans l'API !!!!
+        try {
+            await this.hubConnection!.invoke('SendComment', values); // SendComment correspond au nom de la méthode dans mon API
+        } catch (error) {
+            console.log(error)
         }
-
-
-        
     }
 }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using API.Middleware;
+using API.SignalR;
 using Application.Activities;
 using Application.Interfaces;
 using AutoMapper;
@@ -56,7 +57,7 @@ namespace API
             ***********************************************************************************/
             services.AddCors(opt => {
                 opt.AddPolicy("CorsPolicy", policy => {
-                    policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
+                    policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:3000").AllowCredentials();
                 });
             });
 
@@ -66,7 +67,13 @@ namespace API
             ***********************************************************************************/
             services.AddMediatR(typeof(List.Handler).Assembly);
 
+            //ajout de l'auto mapper
             services.AddAutoMapper(typeof(List.Handler));
+
+            /***********************************************************************************
+                                        Ajout de SignalR 
+            ***********************************************************************************/
+            services.AddSignalR();
 
             // Ajoute les validations 
             services.AddControllers(opt => 
@@ -105,6 +112,20 @@ namespace API
                     ValidateAudience = false,
                     ValidateIssuer = false
                 };
+                // Gestion des utilisateurs avec SignalR
+                opt.Events = new JwtBearerEvents 
+                {
+                    OnMessageReceived = context => 
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if(!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/chat")))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
             /*******************************************************************************
                             Gestions des links Objets - Interfaces
@@ -140,6 +161,7 @@ namespace API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<ChatHub>("/chat");
             });
         }
     }
