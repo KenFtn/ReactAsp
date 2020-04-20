@@ -7,6 +7,7 @@ using API.Middleware;
 using API.SignalR;
 using Application.Activities;
 using Application.Interfaces;
+using Application.Profiles;
 using AutoMapper;
 using Domain;
 using FluentValidation.AspNetCore;
@@ -133,6 +134,7 @@ namespace API
             services.AddScoped<IUserAccessor, UserAccessor>();
             services.AddScoped<IPhotoAccessor, PhotoAccessor>();
             services.AddScoped<IJwtGenerator, JwtGenerator>();
+            services.AddScoped<IProfileReader, ProfileReader>();
 
             /********************************************************************************
                             Ajout de la gestion du cloud
